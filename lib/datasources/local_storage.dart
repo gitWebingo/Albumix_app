@@ -40,14 +40,6 @@ class LocalStorageService {
     await metaBox.put('categories', categories);
   }
 
-  List<String> getTags() {
-    return (metaBox.get('tags') as List<dynamic>?)?.cast<String>() ?? [];
-  }
-
-  Future<void> saveTags(List<String> tags) async {
-    await metaBox.put('tags', tags);
-  }
-
   Future<void> setOnboardingSeen() async {
     await metaBox.put('seenOnboarding', true);
   }

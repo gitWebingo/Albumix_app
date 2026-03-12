@@ -1,19 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:transparent_image/transparent_image.dart';
 import '../models/photo.dart';
 import '../screens/photo_detail_screen.dart';
 
 class PhotoTile extends StatelessWidget {
-  final List<dynamic> photos;
+  final List<Photo> photos;
   final int index;
 
   const PhotoTile({super.key, required this.photos, required this.index});
 
-  dynamic get item => photos[index];
+  Photo get item => photos[index];
 
   @override
   Widget build(BuildContext context) {
@@ -46,33 +44,21 @@ class PhotoTile extends StatelessWidget {
     );
   }
 
+
   Widget _buildImage() {
-    if (item is Photo) {
-      final photo = item as Photo;
-      return FadeInImage(
-        placeholder: MemoryImage(kTransparentImage),
-        image:
-            (photo.mediaType == MediaType.video && photo.thumbnailPath != null)
-                ? FileImage(File(photo.thumbnailPath!))
-                : FileImage(File(photo.path)),
-        fit: BoxFit.cover,
-        fadeInDuration: const Duration(milliseconds: 300),
-        imageErrorBuilder: (context, error, stackTrace) {
-          return _buildErrorPlaceholder();
-        },
-      );
-    } else {
-      final asset = item as AssetEntity;
-      return AssetEntityImage(
-        asset,
-        isOriginal: false,
-        thumbnailSize: const ThumbnailSize.square(300),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildErrorPlaceholder();
-        },
-      );
-    }
+    final photo = item;
+    return FadeInImage(
+      placeholder: MemoryImage(kTransparentImage),
+      image:
+          (photo.mediaType == MediaType.video && photo.thumbnailPath != null)
+              ? FileImage(File(photo.thumbnailPath!))
+              : FileImage(File(photo.path)),
+      fit: BoxFit.cover,
+      fadeInDuration: const Duration(milliseconds: 300),
+      imageErrorBuilder: (context, error, stackTrace) {
+        return _buildErrorPlaceholder();
+      },
+    );
   }
 
   Widget _buildErrorPlaceholder() {
@@ -88,12 +74,9 @@ class PhotoTile extends StatelessWidget {
   }
 
   Widget _buildOverlays() {
-    final isVideo = item is Photo
-        ? (item as Photo).mediaType == MediaType.video
-        : (item as AssetEntity).type == AssetType.video;
-
-    final category = item is Photo ? (item as Photo).category : null;
-    final isFavorite = item is Photo ? (item as Photo).isFavorite : false;
+    final isVideo = item.mediaType == MediaType.video;
+    final category = item.category;
+    final isFavorite = item.isFavorite;
 
     return Stack(
       children: [

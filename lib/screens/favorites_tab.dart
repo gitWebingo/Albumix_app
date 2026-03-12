@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../providers/gallery_provider.dart';
 import '../widgets/photo_tile.dart';
 
@@ -23,18 +22,26 @@ class FavoritesTab extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'No favorites yet',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w200,
+                        letterSpacing: 1.5,
+                        color: Colors.white70,
+                      ),
                 ),
               ],
             ),
           );
         }
 
-        return MasonryGridView.count(
+        return GridView.builder(
           padding: const EdgeInsets.all(8),
-          crossAxisCount: 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 1.0,
+          ),
           itemCount: favorites.length,
           itemBuilder: (context, index) {
             return PhotoTile(photos: favorites, index: index);

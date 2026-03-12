@@ -85,33 +85,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Logo / Icon Section
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF6366F1).withOpacity(0.05),
-                      border: Border.all(
-                          color: const Color(0xFF6366F1).withOpacity(0.1)),
-                    ),
-                    child: const Icon(
-                      Icons.lock_rounded,
-                      size: 64,
-                      color: Color(0xFF6366F1),
-                    ),
+                  Image.asset(
+                    "assets/icons/logo_full.png",
+                    height: 150,
+                    width: 200,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   Text(
-                    "Welcome back",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1,
+                    "MEMORIES IN MOTION",
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          letterSpacing: 2,
+                          color: Colors.white.withOpacity(0.3),
+                          fontWeight: FontWeight.w500,
                         ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Secure access to your memories",
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+
                   const SizedBox(height: 48),
                   // Login Form Card
                   Container(

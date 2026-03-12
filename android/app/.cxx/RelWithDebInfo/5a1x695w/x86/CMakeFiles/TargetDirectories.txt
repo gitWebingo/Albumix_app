@@ -1,0 +1,2 @@
+C:/Users/PC/Desktop/Nipa/Albumix_app/android/app/.cxx/RelWithDebInfo/5a1x695w/x86/CMakeFiles/edit_cache.dir
+C:/Users/PC/Desktop/Nipa/Albumix_app/android/app/.cxx/RelWithDebInfo/5a1x695w/x86/CMakeFiles/rebuild_cache.dir

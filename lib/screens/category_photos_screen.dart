@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../providers/gallery_provider.dart';
 import '../widgets/photo_tile.dart';
 import '../models/photo.dart';
@@ -42,7 +41,7 @@ class CategoryPhotosScreen extends StatelessWidget {
             Consumer<GalleryProvider>(
               builder: (context, provider, child) {
                 final photos = provider.photos
-                    .where((p) => p is Photo && p.category == category)
+                    .where((p) => p.category == category)
                     .toList();
 
                 if (photos.isEmpty) {
@@ -58,20 +57,34 @@ class CategoryPhotosScreen extends StatelessWidget {
 
                 return SliverPadding(
                   padding: const EdgeInsets.all(16),
-                  sliver: SliverMasonryGrid.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    itemBuilder: (context, index) {
-                      return PhotoTile(photos: photos, index: index);
-                    },
-                    childCount: photos.length,
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 1.0,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          PhotoTile(photos: photos, index: index),
+                      childCount: photos.length,
+                    ),
                   ),
                 );
               },
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context
+              .read<GalleryProvider>()
+              .pickAndImportPhotos(category: category);
+        },
+        icon: const Icon(Icons.add_photo_alternate_rounded),
+        label: const Text("Add Photos"),
       ),
     );
   }

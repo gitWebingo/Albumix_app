@@ -1,12 +1,10 @@
 import 'dart:io' as io;
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
-import 'package:photo_manager/photo_manager.dart';
+
 import '../models/photo.dart';
 import '../providers/gallery_provider.dart';
-import '../widgets/photo_tile.dart';
-import 'people_tab.dart';
+
 import 'category_photos_screen.dart';
 import 'login_screen.dart';
 import 'trash_screen.dart';
@@ -23,13 +21,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 2,
       child: Scaffold(
         body: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                expandedHeight: 120,
+                expandedHeight: 130,
                 floating: true,
                 pinned: true,
                 elevation: 0,
@@ -37,13 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: const Color(0xFF020617),
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-                  title: Text(
-                    'Albumix',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                          fontSize: 24,
-                        ),
+                  title: Image.asset(
+                    "assets/icons/logo_full.png",
+                    height: 100,
+                    fit: BoxFit.contain,
                   ),
                   background: Container(
                     decoration: const BoxDecoration(
@@ -119,6 +114,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   const SizedBox(width: 8),
+                  // IconButton(
+                  //   icon: Container(
+                  //     padding: const EdgeInsets.all(8),
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.white.withOpacity(0.05),
+                  //       shape: BoxShape.circle,
+                  //     ),
+                  //     child: Icon(
+                  //       context.watch<GalleryProvider>().isGridView
+                  //           ? Icons.grid_view_rounded
+                  //           : Icons.view_list_rounded,
+                  //       size: 20,
+                  //     ),
+                  //   ),
+                  //   onPressed: () =>
+                  //       context.read<GalleryProvider>().toggleViewMode(),
+                  // ),
+                  // const SizedBox(width: 8),
                 ],
               ),
               SliverPersistentHeader(
@@ -126,9 +139,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 delegate: _SliverAppBarDelegate(
                   TabBar(
                     labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w800, letterSpacing: 1),
-                    unselectedLabelStyle:
-                        const TextStyle(fontWeight: FontWeight.w500),
+                      fontWeight: FontWeight.w200,
+                      letterSpacing: 2.0,
+                      fontSize: 20,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w200,
+                      fontSize: 20,
+                    ),
                     indicatorSize: TabBarIndicatorSize.label,
                     indicator: const UnderlineTabIndicator(
                       borderSide:
@@ -136,9 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       insets: EdgeInsets.symmetric(horizontal: 16),
                     ),
                     tabs: const [
-                      Tab(text: 'Photos'),
-                      Tab(text: 'Albums'),
-                      Tab(text: 'People'),
+                      Tab(text: 'Folders'),
                       Tab(text: 'Favorites'),
                     ],
                   ),
@@ -150,9 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context, provider, child) {
               return TabBarView(
                 children: [
-                  const PhotosTab(),
                   const AlbumsTab(),
-                  const PeopleTab(),
                   const FavoritesTab(),
                 ],
               );
@@ -163,7 +177,14 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () =>
               context.read<GalleryProvider>().pickAndImportPhotos(),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('IMPORT'),
+          label: const Text(
+            'IMPORT',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w200,
+              letterSpacing: 2,
+            ),
+          ),
         ),
       ),
     );
@@ -195,138 +216,6 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class PhotosTab extends StatefulWidget {
-  const PhotosTab({super.key});
-
-  @override
-  State<PhotosTab> createState() => _PhotosTabState();
-}
-
-class _PhotosTabState extends State<PhotosTab> {
-  late ScrollController _scrollController;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController()..addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      context.read<GalleryProvider>().fetchMoreAssets();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<GalleryProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading && provider.photos.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final groupedPhotos = provider.photosByMonth;
-
-        if (groupedPhotos.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.image_not_supported_outlined,
-                    size: 64, color: Colors.white24),
-                const SizedBox(height: 16),
-                Text(
-                  'No photos yet',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                TextButton(
-                  onPressed: () => provider.pickAndImportPhotos(),
-                  child: const Text('Import photos'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final List<Widget> slivers = [];
-        for (var month in groupedPhotos.keys) {
-          final monthPhotos = groupedPhotos[month]!;
-
-          // Month Header Sliver
-          slivers.add(
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      month.toUpperCase(),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-
-          // Photos Grid Sliver
-          slivers.add(
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverMasonryGrid.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                itemBuilder: (context, index) {
-                  return PhotoTile(photos: monthPhotos, index: index);
-                },
-                childCount: monthPhotos.length,
-              ),
-            ),
-          );
-        }
-
-        if (provider.isFetchingMore) {
-          slivers.add(
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ),
-          );
-        }
-
-        return CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: slivers,
-        );
-      },
-    );
-  }
-}
-
 class AlbumsTab extends StatelessWidget {
   const AlbumsTab({super.key});
 
@@ -334,6 +223,36 @@ class AlbumsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<GalleryProvider>(
       builder: (context, provider, child) {
+        if (provider.photos.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.photo_library_outlined,
+                      size: 64, color: Colors.white24),
+                  const SizedBox(height: 16),
+                  Text(
+                    'There are no photos uploaded. You can upload photos from the gallery.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        context.read<GalleryProvider>().pickAndImportPhotos(),
+                    icon: const Icon(Icons.add_photo_alternate_rounded),
+                    label: const Text('Import Photos'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         final categories = provider.categories;
 
         return GridView.builder(
@@ -351,19 +270,17 @@ class AlbumsTab extends StatelessWidget {
               return _buildAddCategoryCard(context);
             }
             final category = categories[index];
-            final count = provider.photos
-                .whereType<Photo>()
-                .where((p) => p.category == category)
-                .length;
+            final count =
+                provider.photos.where((p) => p.category == category).length;
 
-            final categoryPhotos = provider.photos
-                .whereType<Photo>()
-                .where((p) => p.category == category);
+            final categoryPhotos =
+                provider.photos.where((p) => p.category == category);
             final firstPhoto =
                 categoryPhotos.isEmpty ? null : categoryPhotos.first;
 
             return _buildCategoryCard(
-                context, category, count, firstPhoto?.path);
+                context, category, count, firstPhoto?.path,
+                isFolder: true);
           },
         );
       },
@@ -384,7 +301,7 @@ class AlbumsTab extends StatelessWidget {
                 size: 40, color: Colors.white70),
             const SizedBox(height: 8),
             Text(
-              'New Album',
+              'New Folder',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
@@ -394,7 +311,8 @@ class AlbumsTab extends StatelessWidget {
   }
 
   Widget _buildCategoryCard(
-      BuildContext context, String category, int count, String? imagePath) {
+      BuildContext context, String category, int count, String? imagePath,
+      {bool isFolder = false}) {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -419,7 +337,7 @@ class AlbumsTab extends StatelessWidget {
             else
               Container(
                   color: Colors.grey[850],
-                  child: const Icon(Icons.folder,
+                  child: Icon(isFolder ? Icons.folder : Icons.photo_album,
                       size: 40, color: Colors.white24)),
             Container(color: Colors.black45),
             Padding(
@@ -457,10 +375,10 @@ class AlbumsTab extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('New Album'),
+        title: const Text('New Folder'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Album Name'),
+          decoration: const InputDecoration(hintText: 'Folder Name'),
         ),
         actions: [
           TextButton(

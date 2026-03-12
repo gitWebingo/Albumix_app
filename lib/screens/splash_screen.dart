@@ -76,41 +76,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.03),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.photo_library_outlined,
-                          size: 64,
-                          color: Color(0xFF6366F1),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Text(
-                        "ALBUMIX",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              letterSpacing: 8,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "MEMORIES IN MOTION",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              letterSpacing: 2,
-                              color: Colors.white.withOpacity(0.3),
-                              fontWeight: FontWeight.w500,
-                            ),
+                      Image.asset(
+                        "assets/icons/logo_full.png",
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
                     ],
                   ),

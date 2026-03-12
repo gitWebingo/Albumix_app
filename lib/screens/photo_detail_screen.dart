@@ -4,13 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import '../providers/gallery_provider.dart';
 import '../models/photo.dart';
 
 class PhotoDetailScreen extends StatefulWidget {
-  final List<dynamic> photos;
+  final List<Photo> photos;
   final int initialIndex;
 
   const PhotoDetailScreen({
@@ -52,8 +50,9 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
               body: Center(child: Text("No photos available")));
         }
 
-        final currentItem = widget.photos[_currentIndex];
-        final isImported = currentItem is Photo;
+        final currentItem = provider.allImportedPhotos.firstWhere(
+            (p) => p.id == widget.photos[_currentIndex].id,
+            orElse: () => widget.photos[_currentIndex]);
 
         return Scaffold(
           backgroundColor: Colors.black,
@@ -73,32 +72,29 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
               ),
             ),
             actions: [
-              if (isImported) ...[
-                _buildAppBarAction(
-                  icon: currentItem.isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_outline_rounded,
-                  color: currentItem.isFavorite
-                      ? const Color(0xFF6366F1)
-                      : Colors.white,
-                  onPressed: () => provider.toggleFavorite(currentItem.id),
-                ),
-                _buildAppBarAction(
-                  icon: Icons.share_rounded,
-                  onPressed: () => provider.sharePhoto(currentItem.path),
-                ),
-                _buildAppBarAction(
-                  icon: Icons.info_outline_rounded,
-                  onPressed: () =>
-                      _showInfoSheet(context, currentItem, provider),
-                ),
-                _buildAppBarAction(
-                  icon: Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
-                  onPressed: () =>
-                      _confirmDelete(context, provider, currentItem.id),
-                ),
-              ],
+              _buildAppBarAction(
+                icon: currentItem.isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_outline_rounded,
+                color: currentItem.isFavorite
+                    ? const Color(0xFF6366F1)
+                    : Colors.white,
+                onPressed: () => provider.toggleFavorite(currentItem.id),
+              ),
+              _buildAppBarAction(
+                icon: Icons.share_rounded,
+                onPressed: () => provider.sharePhoto(currentItem.path),
+              ),
+              _buildAppBarAction(
+                icon: Icons.info_outline_rounded,
+                onPressed: () => _showInfoSheet(context, currentItem, provider),
+              ),
+              _buildAppBarAction(
+                icon: Icons.delete_outline_rounded,
+                color: Colors.redAccent,
+                onPressed: () =>
+                    _confirmDelete(context, provider, currentItem.id),
+              ),
               const SizedBox(width: 8),
             ],
           ),
@@ -113,7 +109,10 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  return PhotoDetailItem(item: widget.photos[index]);
+                  return PhotoDetailItem(
+                      item: provider.allImportedPhotos.firstWhere(
+                          (p) => p.id == widget.photos[index].id,
+                          orElse: () => widget.photos[index]));
                 },
               ),
               // Bottom Indicator Overlay
@@ -171,7 +170,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Move to Bin?"),
-        content: const Text(
+        content: const Text( 
             "This photo will be moved to the Bin. You can restore it later."),
         actions: [
           TextButton(
@@ -265,85 +264,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                   ),
 
                   const SizedBox(height: 24),
-
-                  // Tags Section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Tags",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(color: Colors.white70)),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline,
-                            color: Color(0xFFBB86FC)),
-                        onPressed: () =>
-                            _showAddTagDialog(context, provider, photo.id),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: photo.tags
-                        .map((tag) => Chip(
-                              label: Text(tag),
-                              backgroundColor: const Color(0xFF333333),
-                              labelStyle: const TextStyle(color: Colors.white),
-                              deleteIcon: const Icon(Icons.close, size: 18),
-                              onDeleted: () =>
-                                  provider.removeTagFromPhoto(photo.id, tag),
-                            ))
-                        .toList(),
-                  ),
-                  if (photo.tags.isEmpty)
-                    const Text("No tags",
-                        style: TextStyle(
-                            color: Colors.white38,
-                            fontStyle: FontStyle.italic)),
-
                   const SizedBox(height: 24),
-
-                  // People Section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("People",
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(color: Colors.white70)),
-                      IconButton(
-                        icon: const Icon(Icons.person_add_alt_1_rounded,
-                            color: Color(0xFF6366F1)),
-                        onPressed: () =>
-                            _showAddPersonDialog(context, provider, photo.id),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: photo.people
-                        .map((person) => Chip(
-                              avatar: const Icon(Icons.person,
-                                  size: 16, color: Colors.white70),
-                              label: Text(person),
-                              backgroundColor:
-                                  const Color(0xFF6366F1).withOpacity(0.2),
-                              labelStyle: const TextStyle(color: Colors.white),
-                              deleteIcon: const Icon(Icons.close, size: 18),
-                              onDeleted: () => provider.removePersonFromPhoto(
-                                  photo.id, person),
-                            ))
-                        .toList(),
-                  ),
-                  if (photo.people.isEmpty)
-                    const Text("No people tagged",
-                        style: TextStyle(
-                            color: Colors.white38,
-                            fontStyle: FontStyle.italic)),
                 ],
               ),
             );
@@ -370,116 +291,10 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
       ],
     );
   }
-
-  void _showAddTagDialog(
-      BuildContext context, GalleryProvider provider, String photoId) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add Tag"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Tag name"),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 8,
-                  children: provider.tags
-                      .map((t) => ActionChip(
-                            label: Text(t),
-                            onPressed: () {
-                              controller.text = t;
-                            },
-                          ))
-                      .toList(),
-                ),
-              ),
-            )
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                provider.addTagToPhoto(photoId, controller.text.trim());
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Add"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddPersonDialog(
-      BuildContext context, GalleryProvider provider, String photoId) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Tag Person"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Person's name"),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 8,
-                  children: provider.uniquePeople
-                      .map((p) => ActionChip(
-                            label: Text(p),
-                            onPressed: () {
-                              controller.text = p;
-                            },
-                          ))
-                      .toList(),
-                ),
-              ),
-            )
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel")),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                provider.addPersonToPhoto(photoId, controller.text.trim());
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Tag"),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class PhotoDetailItem extends StatefulWidget {
-  final dynamic item;
+  final Photo item;
   const PhotoDetailItem({super.key, required this.item});
 
   @override
@@ -494,16 +309,9 @@ class _PhotoDetailItemState extends State<PhotoDetailItem> {
   @override
   void initState() {
     super.initState();
-    if (widget.item is Photo) {
-      final photo = widget.item as Photo;
-      if (photo.mediaType == MediaType.video) {
-        _initializeVideo(File(photo.path));
-      }
-    } else if (widget.item is AssetEntity) {
-      final asset = widget.item as AssetEntity;
-      if (asset.type == AssetType.video) {
-        _initializeVideoAsset(asset);
-      }
+    final photo = widget.item;
+    if (photo.mediaType == MediaType.video) {
+      _initializeVideo(File(photo.path));
     }
   }
 
@@ -520,17 +328,6 @@ class _PhotoDetailItemState extends State<PhotoDetailItem> {
 
     _videoPlayerController = VideoPlayerController.file(file);
     await _setupChewie();
-  }
-
-  Future<void> _initializeVideoAsset(AssetEntity asset) async {
-    if (_isInitVideo) return;
-    _isInitVideo = true;
-
-    final file = await asset.file;
-    if (file != null) {
-      _videoPlayerController = VideoPlayerController.file(file);
-      await _setupChewie();
-    }
   }
 
   Future<void> _setupChewie() async {
@@ -559,41 +356,21 @@ class _PhotoDetailItemState extends State<PhotoDetailItem> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.item is Photo) {
-      final photo = widget.item as Photo;
-      return Center(
-        child: photo.mediaType == MediaType.video
-            ? (_chewieController != null &&
-                    _chewieController!.videoPlayerController.value.isInitialized
-                ? Chewie(controller: _chewieController!)
-                : const CircularProgressIndicator())
-            : InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.file(
-                  File(photo.path),
-                  fit: BoxFit.contain,
-                ),
+    final photo = widget.item;
+    return Center(
+      child: photo.mediaType == MediaType.video
+          ? (_chewieController != null &&
+                  _chewieController!.videoPlayerController.value.isInitialized
+              ? Chewie(controller: _chewieController!)
+              : const CircularProgressIndicator())
+          : InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.file(
+                File(photo.path),
+                fit: BoxFit.contain,
               ),
-      );
-    } else {
-      final asset = widget.item as AssetEntity;
-      return Center(
-        child: asset.type == AssetType.video
-            ? (_chewieController != null &&
-                    _chewieController!.videoPlayerController.value.isInitialized
-                ? Chewie(controller: _chewieController!)
-                : const CircularProgressIndicator())
-            : InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: AssetEntityImage(
-                  asset,
-                  isOriginal: true,
-                  fit: BoxFit.contain,
-                ),
-              ),
-      );
-    }
+            ),
+    );
   }
 }
